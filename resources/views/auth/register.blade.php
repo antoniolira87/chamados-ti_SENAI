@@ -2,8 +2,8 @@
 @section('title', 'Criar conta')
 @section('content')
 <div class="row justify-content-center mt-4"><div class="col-md-8 col-lg-5">
-    <h1 class="h3 mb-4 text-center">Criar conta</h1>
-    <div class="card border-0 shadow-sm"><div class="card-body p-4">
+    <h1 class="h3 mb-4 text-center text-white fw-bold">Criar conta</h1>
+    <div class="card"><div class="card-body p-4">
         <form action="{{ route('register') }}" method="POST">
             @csrf
             <div class="mb-3">
@@ -33,6 +33,6 @@
             <button class="btn btn-primary w-100" type="submit">Cadastrar</button>
         </form>
     </div></div>
-    <p class="text-center mt-3">Já tem conta? <a href="{{ route('login') }}">Entrar</a></p>
+    <p class="text-center text-white-50 mt-3">Já tem conta? <a class="link-light" href="{{ route('login') }}">Entrar</a></p>
 </div></div>
 @endsection

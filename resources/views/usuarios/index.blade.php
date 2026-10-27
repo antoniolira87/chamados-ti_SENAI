@@ -1,9 +1,10 @@
 @extends('layouts.app')
 @section('title', 'Usuários')
 @section('content')
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-    <div><h1 class="h2 mb-1">Usuários</h1><p class="text-secondary mb-0">Solicitantes, técnicos e administradores</p></div>
-    <a class="btn btn-primary" href="{{ route('usuarios.create') }}"><i class="bi bi-plus-lg"></i> Novo usuário</a>
+<div class="sn-titulo">
+    <div><div class="sn-tipo">Administração</div><h1>Usuários</h1></div>
+    <span class="text-secondary small d-none d-md-inline">Solicitantes, técnicos e administradores</span>
+    <a class="btn btn-sm btn-primary ms-auto" href="{{ route('usuarios.create') }}"><i class="bi bi-plus-lg"></i> Novo usuário</a>
 </div>
 <form method="GET" class="row g-2 mb-3">
     <div class="col-md-5"><input name="busca" value="{{ request('busca') }}" class="form-control" placeholder="Buscar por nome ou e-mail"></div>
@@ -17,10 +18,10 @@
     </div>
     <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
 </form>
-<div class="card border-0 shadow-sm">
+<div class="card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Setor</th><th>Abertos</th><th>Atribuídos</th><th class="text-end">Ações</th></tr></thead>
+        <table class="table table-sm align-middle mb-0 sn-lista">
+            <thead class="table-light"><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Setor</th><th>Grupo</th><th>Abertos</th><th>Atribuídos</th><th class="text-end">Ações</th></tr></thead>
             <tbody>
             @forelse ($usuarios as $usuario)
                 <tr>
@@ -28,6 +29,7 @@
                     <td>{{ $usuario->email }}</td>
                     <td><span class="badge text-bg-{{ ['admin' => 'danger', 'tecnico' => 'primary'][$usuario->perfil] ?? 'secondary' }}">{{ $usuario->perfil_label }}</span></td>
                     <td>{{ $usuario->setor ?: '—' }}</td>
+                    <td>{{ $usuario->grupo?->nome ?? '—' }}</td>
                     <td>{{ $usuario->chamados_abertos_count }}</td>
                     <td>{{ $usuario->chamados_atribuidos_count }}</td>
                     <td class="text-end text-nowrap">
@@ -41,7 +43,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="text-center text-secondary py-5">Nenhum usuário encontrado.</td></tr>
+                <tr><td colspan="8" class="text-center text-secondary py-5">Nenhum usuário encontrado.</td></tr>
             @endforelse
             </tbody>
         </table>

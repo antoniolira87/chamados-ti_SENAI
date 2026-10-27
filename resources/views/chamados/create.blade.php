@@ -1,12 +1,16 @@
 @extends('layouts.app')
-@section('title', 'Abrir chamado')
+@section('title', 'Novo incidente')
 @section('content')
-<div class="row justify-content-center"><div class="col-lg-8">
-    <h1 class="h2 mb-4">Abrir chamado</h1>
-    <div class="card border-0 shadow-sm"><div class="card-body p-4">
-        <form action="{{ route('chamados.store') }}" method="POST">
-            @include('chamados._form', ['botao' => 'Abrir chamado'])
-        </form>
-    </div></div>
+<div class="sn-titulo">
+    <a href="{{ route('chamados.index') }}" class="btn btn-sm btn-light" title="Voltar"><i class="bi bi-chevron-left"></i></a>
+    <div>
+        <div class="sn-tipo">Incidente</div>
+        <h1>Novo registro</h1>
+    </div>
+</div>
+<div class="card"><div class="card-body p-3 p-md-4">
+    <form action="{{ route('chamados.store') }}" method="POST">
+        @include('chamados._form', ['botao' => 'Enviar'])
+    </form>
 </div></div>
 @endsection

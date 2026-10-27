@@ -28,6 +28,17 @@
         @error('setor') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="col-md-6 mb-3">
+        <label for="grupo_id" class="form-label">Grupo de atribuição <small class="text-secondary">(técnicos)</small></label>
+        <select id="grupo_id" name="grupo_id" class="form-select @error('grupo_id') is-invalid @enderror">
+            <option value="">-- Nenhum --</option>
+            @foreach ($grupos as $grupo)
+                <option value="{{ $grupo->id }}" @selected(old('grupo_id', $usuario->grupo_id ?? '') == $grupo->id)>{{ $grupo->nome }}</option>
+            @endforeach
+        </select>
+        @error('grupo_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+    </div>
+    <div class="col-md-6 mb-3"></div>
+    <div class="col-md-6 mb-3">
         <label for="password" class="form-label">Senha @isset($usuario)<small class="text-secondary">(deixe em branco para manter)</small>@endisset</label>
         <input id="password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" minlength="6" @empty($usuario) required @endempty>
         @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror

@@ -19,28 +19,38 @@ class DashboardController extends Controller
             ->pluck('total', 'status');
 
         $porPrioridade = (clone $base)
-            ->whereNotIn('status', ['resolvido', 'fechado'])
+            ->pendentes()
             ->selectRaw('prioridade, count(*) as total')
             ->groupBy('prioridade')
             ->pluck('total', 'prioridade');
 
         $recentes = (clone $base)
-            ->with(['categoria', 'tecnico'])
+            ->with(['categoria', 'grupo', 'tecnico'])
             ->latest()
-            ->limit(5)
+            ->limit(6)
             ->get();
 
         $meusAtendimentos = $user->podeAtender()
             ? Chamado::with('categoria')
                 ->where('tecnico_id', $user->id)
-                ->whereNotIn('status', ['resolvido', 'fechado'])
-                ->orderByRaw("case prioridade when 'urgente' then 1 when 'alta' then 2 when 'media' then 3 else 4 end")
+                ->pendentes()
+                ->orderBy('prioridade')
                 ->limit(5)
                 ->get()
             : collect();
 
+        // Indicadores (KPIs) do topo do painel.
+        $indicadores = [
+            'pendentes' => (clone $base)->pendentes()->count(),
+            'criticos' => (clone $base)->pendentes()->where('prioridade', '<=', 2)->count(),
+            'sem_atribuicao' => (clone $base)->pendentes()->whereNull('tecnico_id')->count(),
+            'meus' => $user->podeAtender()
+                ? Chamado::where('tecnico_id', $user->id)->pendentes()->count()
+                : (clone $base)->where('status', 'resolvido')->count(),
+        ];
+
         $total = $porStatus->sum();
 
-        return view('dashboard', compact('porStatus', 'porPrioridade', 'recentes', 'meusAtendimentos', 'total'));
+        return view('dashboard', compact('porStatus', 'porPrioridade', 'recentes', 'meusAtendimentos', 'indicadores', 'total'));
     }
 }
