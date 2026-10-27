@@ -1,13 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Entrar')
 @section('content')
-<div class="row justify-content-center mt-5"><div class="col-md-6 col-lg-4">
-    <div class="text-center mb-4">
-        <i class="bi bi-headset display-4 text-primary"></i>
-        <h1 class="h3 mt-2">HelpDesk TI</h1>
-        <p class="text-secondary">Sistema de chamados de TI</p>
+<div class="row justify-content-center mt-4 mt-md-5"><div class="col-sm-10 col-md-6 col-lg-4">
+    <div class="text-center text-white mb-4">
+        <span class="d-inline-grid rounded-3 mb-2" style="place-items:center;width:56px;height:56px;background:var(--sn-accent);color:var(--sn-header)"><i class="bi bi-headset fs-2"></i></span>
+        <h1 class="h3 fw-bold mb-1">HelpDesk TI</h1>
+        <p class="text-white-50 mb-0">Gestão de incidentes de TI</p>
     </div>
-    <div class="card border-0 shadow-sm"><div class="card-body p-4">
+    <div class="card"><div class="card-body p-4">
         <form action="{{ route('login') }}" method="POST">
             @csrf
             <div class="mb-3">
@@ -27,6 +27,6 @@
             <button class="btn btn-primary w-100" type="submit">Entrar</button>
         </form>
     </div></div>
-    <p class="text-center mt-3">Não tem conta? <a href="{{ route('register') }}">Cadastre-se</a></p>
+    <p class="text-center text-white-50 mt-3">Não tem conta? <a class="link-light" href="{{ route('register') }}">Cadastre-se</a></p>
 </div></div>
 @endsection

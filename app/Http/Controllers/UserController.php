@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Grupo;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ class UserController extends Controller
     public function index(Request $request): View
     {
         $usuarios = User::query()
+            ->with('grupo')
             ->withCount(['chamadosAbertos', 'chamadosAtribuidos'])
             ->when($request->filled('perfil'), fn ($q) => $q->where('perfil', $request->perfil))
             ->when($request->filled('busca'), function ($q) use ($request) {
@@ -28,7 +30,7 @@ class UserController extends Controller
 
     public function create(): View
     {
-        return view('usuarios.create');
+        return view('usuarios.create', ['grupos' => Grupo::orderBy('nome')->get()]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -38,6 +40,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'perfil' => ['required', Rule::in(array_keys(User::PERFIS))],
             'setor' => ['nullable', 'string', 'max:100'],
+            'grupo_id' => ['nullable', 'exists:grupos,id'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
@@ -58,7 +61,7 @@ class UserController extends Controller
 
     public function edit(User $usuario): View
     {
-        return view('usuarios.edit', compact('usuario'));
+        return view('usuarios.edit', ['usuario' => $usuario, 'grupos' => Grupo::orderBy('nome')->get()]);
     }
 
     public function update(Request $request, User $usuario): RedirectResponse
@@ -68,6 +71,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuario->id)],
             'perfil' => ['required', Rule::in(array_keys(User::PERFIS))],
             'setor' => ['nullable', 'string', 'max:100'],
+            'grupo_id' => ['nullable', 'exists:grupos,id'],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
         ]);
 

@@ -1,13 +1,14 @@
 @extends('layouts.app')
 @section('title', 'Categorias')
 @section('content')
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-    <div><h1 class="h2 mb-1">Categorias</h1><p class="text-secondary mb-0">Tipos de atendimento de TI</p></div>
-    <a class="btn btn-primary" href="{{ route('categorias.create') }}"><i class="bi bi-plus-lg"></i> Nova categoria</a>
+<div class="sn-titulo">
+    <div><div class="sn-tipo">Administração</div><h1>Categorias</h1></div>
+    <span class="text-secondary small d-none d-md-inline">Tipos de atendimento de TI</span>
+    <a class="btn btn-sm btn-primary ms-auto" href="{{ route('categorias.create') }}"><i class="bi bi-plus-lg"></i> Nova categoria</a>
 </div>
-<div class="card border-0 shadow-sm">
+<div class="card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-sm align-middle mb-0 sn-lista">
             <thead class="table-light"><tr><th>Nome</th><th>Descrição</th><th>Chamados</th><th class="text-end">Ações</th></tr></thead>
             <tbody>
             @forelse ($categorias as $categoria)
