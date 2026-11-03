@@ -24,5 +24,8 @@ return [
         'nome' => 'nome',
         'descricao' => 'descrição',
         'status' => 'status',
+        'grupo_id' => 'grupo de atribuição',
+        'impacto' => 'impacto',
+        'urgencia' => 'urgência',
     ],
 ];

@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ChamadoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,9 +23,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('chamados', ChamadoController::class);
     Route::patch('chamados/{chamado}/status', [ChamadoController::class, 'atualizarStatus'])
         ->name('chamados.status');
+    Route::post('chamados/{chamado}/comentarios', [ChamadoController::class, 'comentar'])
+        ->name('chamados.comentar');
 
     Route::middleware('can:admin')->group(function () {
         Route::resource('categorias', CategoriaController::class);
+        Route::resource('grupos', GrupoController::class);
         Route::resource('usuarios', UserController::class)->parameters(['usuarios' => 'usuario']);
     });
 });
