@@ -51,6 +51,10 @@ tests/Feature/         ChamadosTest
 - Composer
 - MySQL/MariaDB (ou SQLite)
 
+## Jeito mais fácil (Windows)
+
+Com PHP 8.3+ e Composer instalados, dê **dois cliques em `iniciar.bat`**. Na primeira vez ele instala as dependências e cria um banco SQLite com dados de exemplo; depois liga o servidor e abre o navegador em <http://127.0.0.1:8000>.
+
 ## Instalação
 
 ```bash
