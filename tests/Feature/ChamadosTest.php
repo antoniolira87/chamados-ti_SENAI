@@ -24,7 +24,8 @@ class ChamadosTest extends TestCase
         return Chamado::create($attrs + [
             'titulo' => 'PC não liga',
             'descricao' => 'Não liga desde ontem.',
-            'prioridade' => 'alta',
+            'impacto' => 1,
+            'urgencia' => 2,
             'status' => 'aberto',
             'categoria_id' => $categoria->id,
             'solicitante_id' => $solicitante->id,
@@ -57,20 +58,23 @@ class ChamadosTest extends TestCase
             'titulo' => 'Excel travando',
             'descricao' => 'Trava ao abrir planilhas grandes.',
             'categoria_id' => $categoria->id,
-            'prioridade' => 'media',
+            'impacto' => 2,
+            'urgencia' => 1,
         ])->assertRedirect();
 
         $chamado = Chamado::first();
         $this->assertSame('aberto', $chamado->status);
         $this->assertSame($user->id, $chamado->solicitante_id);
+        $this->assertSame(2, $chamado->prioridade);
+        $this->assertMatchesRegularExpression('/^INC\d{7}$/', $chamado->numero);
         $this->assertCount(1, $chamado->historicos);
     }
 
     public function test_validacao_ao_abrir_chamado(): void
     {
         $this->actingAs($this->usuario())
-            ->post('/chamados', ['titulo' => '', 'prioridade' => 'inexistente'])
-            ->assertSessionHasErrors(['titulo', 'descricao', 'categoria_id', 'prioridade']);
+            ->post('/chamados', ['titulo' => '', 'impacto' => 9])
+            ->assertSessionHasErrors(['titulo', 'descricao', 'categoria_id', 'impacto', 'urgencia']);
     }
 
     public function test_usuario_ve_apenas_os_proprios_chamados(): void
@@ -143,6 +147,83 @@ class ChamadosTest extends TestCase
         $admin = $this->usuario('admin');
         $this->actingAs($admin)->post('/categorias', ['nome' => 'Rede'])->assertRedirect(route('categorias.index'));
         $this->assertDatabaseHas('categorias', ['nome' => 'Rede']);
+
+        $this->actingAs($this->usuario('tecnico'))->get('/grupos')->assertForbidden();
+        $this->actingAs($admin)->post('/grupos', ['nome' => 'Banco de Dados'])->assertRedirect(route('grupos.index'));
+        $this->assertDatabaseHas('grupos', ['nome' => 'Banco de Dados']);
+    }
+
+    public function test_prioridade_segue_matriz_impacto_urgencia(): void
+    {
+        $matriz = [[1, 1, 1], [1, 2, 2], [1, 3, 3], [2, 2, 3], [2, 3, 4], [3, 2, 4], [3, 3, 5]];
+
+        foreach ($matriz as [$impacto, $urgencia, $esperada]) {
+            $chamado = $this->chamado($this->usuario(), compact('impacto', 'urgencia'));
+            $this->assertSame($esperada, $chamado->prioridade, "Impacto {$impacto} x Urgência {$urgencia}");
+        }
+    }
+
+    public function test_numero_do_incidente_e_sequencial(): void
+    {
+        $user = $this->usuario();
+        $a = $this->chamado($user);
+        $b = $this->chamado($user);
+
+        $this->assertSame(Chamado::gerarNumero($a->id), $a->fresh()->numero);
+        $this->assertSame('INC'.str_pad((string) (10000 + $b->id), 7, '0', STR_PAD_LEFT), $b->fresh()->numero);
+        $this->actingAs($user)->get('/chamados?busca='.$b->numero)->assertSee($b->titulo);
+    }
+
+    public function test_nota_de_trabalho_fica_oculta_para_o_solicitante(): void
+    {
+        $tecnico = $this->usuario('tecnico');
+        $solicitante = $this->usuario();
+        $chamado = $this->chamado($solicitante);
+
+        $this->actingAs($tecnico)->patch(route('chamados.status', $chamado), [
+            'status' => 'em_andamento', 'tecnico_id' => $tecnico->id,
+            'tipo' => 'nota', 'comentario' => 'Senha do roteador é segredo-interno',
+        ]);
+        $this->actingAs($tecnico)->patch(route('chamados.status', $chamado), [
+            'status' => 'em_andamento', 'tecnico_id' => $tecnico->id,
+            'tipo' => 'comentario', 'comentario' => 'Estou indo até sua mesa.',
+        ]);
+
+        $this->actingAs($tecnico)->get(route('chamados.show', $chamado))
+            ->assertSee('segredo-interno')->assertSee('Estou indo até sua mesa.');
+
+        // O solicitante vê a mudança de estado e o comentário, mas não a nota interna.
+        $this->actingAs($solicitante)->get(route('chamados.show', $chamado))
+            ->assertDontSee('segredo-interno')
+            ->assertSee('Estou indo até sua mesa.')
+            ->assertSee('Em andamento');
+    }
+
+    public function test_resolver_exige_notas_de_resolucao(): void
+    {
+        $tecnico = $this->usuario('tecnico');
+        $chamado = $this->chamado($this->usuario());
+
+        $this->actingAs($tecnico)->patch(route('chamados.status', $chamado), ['status' => 'resolvido'])
+            ->assertSessionHasErrors('comentario');
+
+        $this->assertSame('aberto', $chamado->fresh()->status);
+    }
+
+    public function test_solicitante_adiciona_comentario(): void
+    {
+        $solicitante = $this->usuario();
+        $chamado = $this->chamado($solicitante);
+
+        $this->actingAs($solicitante)->post(route('chamados.comentar', $chamado), ['comentario' => 'Reiniciei e continua.'])
+            ->assertRedirect(route('chamados.show', $chamado));
+
+        $this->assertDatabaseHas('chamado_historicos', [
+            'chamado_id' => $chamado->id, 'tipo' => 'comentario', 'comentario' => 'Reiniciei e continua.',
+        ]);
+
+        $this->actingAs($this->usuario())->post(route('chamados.comentar', $chamado), ['comentario' => 'x'])
+            ->assertForbidden();
     }
 
     public function test_paginas_principais_renderizam(): void
@@ -152,8 +233,13 @@ class ChamadosTest extends TestCase
         $chamado = Chamado::first();
 
         foreach (['/', '/chamados', '/chamados/create', "/chamados/{$chamado->id}", "/chamados/{$chamado->id}/edit",
-                  '/categorias', '/categorias/create', '/usuarios', '/usuarios/create', "/usuarios/{$admin->id}", "/usuarios/{$admin->id}/edit"] as $url) {
+                  '/categorias', '/categorias/create', '/grupos', '/grupos/create', '/usuarios', '/usuarios/create', "/usuarios/{$admin->id}", "/usuarios/{$admin->id}/edit"] as $url) {
             $this->actingAs($admin)->get($url)->assertOk();
+        }
+
+        $maria = User::where('email', 'maria@helpdesk.test')->first();
+        foreach (['/', '/chamados', '/chamados?fila=pendentes', '/chamados/create', '/chamados/'.$maria->chamadosAbertos()->first()->id] as $url) {
+            $this->actingAs($maria)->get($url)->assertOk();
         }
     }
 }
