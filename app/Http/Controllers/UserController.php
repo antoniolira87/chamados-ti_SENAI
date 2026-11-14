@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UsuarioRequest;
 use App\Models\Grupo;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -33,18 +33,9 @@ class UserController extends Controller
         return view('usuarios.create', ['grupos' => Grupo::orderBy('nome')->get()]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(UsuarioRequest $request): RedirectResponse
     {
-        $dados = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'perfil' => ['required', Rule::in(array_keys(User::PERFIS))],
-            'setor' => ['nullable', 'string', 'max:100'],
-            'grupo_id' => ['nullable', 'exists:grupos,id'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
-
-        User::create($dados);
+        User::create($request->validated());
 
         return redirect()->route('usuarios.index')->with('sucesso', 'Usuário cadastrado com sucesso.');
     }
@@ -64,16 +55,9 @@ class UserController extends Controller
         return view('usuarios.edit', ['usuario' => $usuario, 'grupos' => Grupo::orderBy('nome')->get()]);
     }
 
-    public function update(Request $request, User $usuario): RedirectResponse
+    public function update(UsuarioRequest $request, User $usuario): RedirectResponse
     {
-        $dados = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuario->id)],
-            'perfil' => ['required', Rule::in(array_keys(User::PERFIS))],
-            'setor' => ['nullable', 'string', 'max:100'],
-            'grupo_id' => ['nullable', 'exists:grupos,id'],
-            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
-        ]);
+        $dados = $request->validated();
 
         // Senha em branco mantém a atual.
         if (empty($dados['password'])) {

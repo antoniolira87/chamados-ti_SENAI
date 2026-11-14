@@ -82,20 +82,48 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-lg-6">
+        <div class="sn-campo">
+            <label for="inicio_problema" class="obrigatorio">Problema começou em</label>
+            <div>
+                <input id="inicio_problema" type="date" name="inicio_problema"
+                       class="form-control form-control-sm @error('inicio_problema') is-invalid @enderror"
+                       value="{{ old('inicio_problema', isset($chamado) ? $chamado->inicio_problema?->format('Y-m-d') : today()->format('Y-m-d')) }}"
+                       max="{{ today()->format('Y-m-d') }}" data-validar="inicio" required>
+                <div class="invalid-feedback">@error('inicio_problema'){{ $message }}@enderror</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="sn-campo">
+            <label for="prazo" class="obrigatorio">Prazo para resolver</label>
+            <div>
+                <input id="prazo" type="date" name="prazo"
+                       class="form-control form-control-sm @error('prazo') is-invalid @enderror"
+                       value="{{ old('prazo', isset($chamado) ? $chamado->prazo?->format('Y-m-d') : today()->addDays(\App\Models\Chamado::DIAS_DE_PRAZO[$prioridade])->format('Y-m-d')) }}"
+                       data-validar="prazo" @empty($chamado) data-novo @endempty required>
+                <div class="invalid-feedback">@error('prazo'){{ $message }}@enderror</div>
+                <div class="form-text" data-periodo>Pode ser no mesmo dia em que o problema começou.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="sn-campo sn-campo-largo">
     <label for="titulo" class="obrigatorio">Descrição resumida</label>
     <div>
         <input id="titulo" name="titulo" class="form-control form-control-sm @error('titulo') is-invalid @enderror"
-               value="{{ old('titulo', $chamado->titulo ?? '') }}" maxlength="255" required placeholder="Resumo do problema em uma linha">
-        @error('titulo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+               value="{{ old('titulo', $chamado->titulo ?? '') }}" minlength="3" maxlength="100" data-validar="titulo" required placeholder="Resumo do problema em uma linha">
+        <div class="invalid-feedback">@error('titulo'){{ $message }}@enderror</div>
     </div>
 </div>
 <div class="sn-campo sn-campo-largo align-items-start">
     <label for="descricao" class="obrigatorio pt-1">Descrição</label>
     <div>
         <textarea id="descricao" name="descricao" rows="6" class="form-control form-control-sm @error('descricao') is-invalid @enderror"
-                  maxlength="5000" required placeholder="O que aconteceu, desde quando, mensagens de erro, quem é afetado...">{{ old('descricao', $chamado->descricao ?? '') }}</textarea>
-        @error('descricao') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                  minlength="10" maxlength="5000" data-validar="descricao" required placeholder="O que aconteceu, desde quando, mensagens de erro, quem é afetado...">{{ old('descricao', $chamado->descricao ?? '') }}</textarea>
+        <div class="invalid-feedback">@error('descricao'){{ $message }}@enderror</div>
     </div>
 </div>
 
@@ -121,4 +149,5 @@
         urgencia.addEventListener('change', atualizar);
     })();
 </script>
+<script src="{{ asset('js/validacao.js') }}"></script>
 @endpush

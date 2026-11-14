@@ -41,6 +41,14 @@
             </div>
             <div class="sn-campo"><span class="rotulo">Categoria</span><div class="valor">{{ $chamado->categoria->nome }}</div></div>
             <div class="sn-campo"><span class="rotulo">Aberto em</span><div class="valor">{{ $chamado->created_at->format('d/m/Y H:i') }}</div></div>
+            @if ($chamado->inicio_problema)
+                <div class="sn-campo"><span class="rotulo">Período</span>
+                    <div class="valor">
+                        {{ $chamado->inicio_problema->format('d/m/Y') }} até {{ $chamado->prazo?->format('d/m/Y') }}
+                        @if ($chamado->atrasado())<span class="badge text-bg-danger ms-1">Atrasado</span>@endif
+                    </div>
+                </div>
+            @endif
             <div class="sn-campo"><span class="rotulo">Atualizado</span><div class="valor">{{ $chamado->updated_at->format('d/m/Y H:i') }} <span class="text-secondary small">({{ $chamado->updated_at->diffForHumans() }})</span></div></div>
             @if ($chamado->resolvido_em)
                 <div class="sn-campo"><span class="rotulo">Resolvido em</span><div class="valor">{{ $chamado->resolvido_em->format('d/m/Y H:i') }}</div></div>

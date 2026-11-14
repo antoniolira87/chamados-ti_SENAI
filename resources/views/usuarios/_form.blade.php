@@ -1,17 +1,20 @@
 @csrf
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label for="name" class="form-label">Nome</label>
+        <label for="name" class="form-label">Nome completo</label>
         <input id="name" name="name" class="form-control @error('name') is-invalid @enderror"
-               value="{{ old('name', $usuario->name ?? '') }}" maxlength="255" required>
-        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+               value="{{ old('name', $usuario->name ?? '') }}" minlength="3" maxlength="100" data-validar="nome" required>
+        <div class="invalid-feedback">@error('name'){{ $message }}@enderror</div>
     </div>
     <div class="col-md-6 mb-3">
         <label for="email" class="form-label">E-mail</label>
         <input id="email" type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-               value="{{ old('email', $usuario->email ?? '') }}" maxlength="255" required>
-        @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+               value="{{ old('email', $usuario->email ?? '') }}" maxlength="100" data-validar="email" required>
+        <div class="invalid-feedback">@error('email'){{ $message }}@enderror</div>
     </div>
+
+    @include('usuarios._dados_pessoais', ['usuario' => $usuario ?? null])
+
     <div class="col-md-6 mb-3">
         <label for="perfil" class="form-label">Perfil</label>
         <select id="perfil" name="perfil" class="form-select @error('perfil') is-invalid @enderror" required>
@@ -52,3 +55,7 @@
     <button type="submit" class="btn btn-primary">{{ $botao }}</button>
     <a href="{{ route('usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
 </div>
+
+@push('scripts')
+    <script src="{{ asset('js/validacao.js') }}"></script>
+@endpush

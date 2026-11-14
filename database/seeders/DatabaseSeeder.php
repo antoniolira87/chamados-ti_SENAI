@@ -6,6 +6,7 @@ use App\Models\Categoria;
 use App\Models\Chamado;
 use App\Models\Grupo;
 use App\Models\User;
+use App\Rules\Cpf;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,6 +19,11 @@ class DatabaseSeeder extends Seeder
             ['nome' => 'Redes e Telecom', 'descricao' => 'Wi-Fi, cabeamento, VPN e telefonia.'],
         ])->mapWithKeys(fn ($g) => [$g['nome'] => Grupo::create($g)]);
 
+        // Dados pessoais de exemplo (CPF gerado com dígitos verificadores válidos).
+        $pessoais = fn (string $nascimento, string $celular, string $cep) => [
+            'cpf' => Cpf::gerar(), 'data_nascimento' => $nascimento, 'celular' => $celular, 'cep' => $cep,
+        ];
+
         $admin = User::create([
             'name' => 'Administrador',
             'email' => 'admin@helpdesk.test',
@@ -25,7 +31,7 @@ class DatabaseSeeder extends Seeder
             'perfil' => 'admin',
             'setor' => 'TI',
             'grupo_id' => $grupos['Service Desk']->id,
-        ]);
+        ] + $pessoais('1985-03-12', '11987650001', '01310100'));
 
         User::create([
             'name' => 'Antonio Lira',
@@ -34,17 +40,17 @@ class DatabaseSeeder extends Seeder
             'perfil' => 'admin',
             'setor' => 'TI',
             'grupo_id' => $grupos['Service Desk']->id,
-        ]);
+        ] + $pessoais('1987-07-20', '11987650002', '01001000'));
 
         $tecnicos = collect([
-            ['name' => 'Carlos Técnico', 'email' => 'carlos@helpdesk.test', 'grupo_id' => $grupos['Infraestrutura']->id],
-            ['name' => 'Fernanda Suporte', 'email' => 'fernanda@helpdesk.test', 'grupo_id' => $grupos['Service Desk']->id],
+            ['name' => 'Carlos Técnico', 'email' => 'carlos@helpdesk.test', 'grupo_id' => $grupos['Infraestrutura']->id] + $pessoais('1990-05-04', '11987650003', '04538133'),
+            ['name' => 'Fernanda Suporte', 'email' => 'fernanda@helpdesk.test', 'grupo_id' => $grupos['Service Desk']->id] + $pessoais('1995-11-23', '11987650004', '05426100'),
         ])->map(fn ($t) => User::create($t + ['password' => 'senha123', 'perfil' => 'tecnico', 'setor' => 'TI']));
 
         $usuarios = collect([
-            ['name' => 'Maria Silva', 'email' => 'maria@helpdesk.test', 'setor' => 'Financeiro'],
-            ['name' => 'João Souza', 'email' => 'joao@helpdesk.test', 'setor' => 'RH'],
-            ['name' => 'Ana Lima', 'email' => 'ana@helpdesk.test', 'setor' => 'Comercial'],
+            ['name' => 'Maria Silva', 'email' => 'maria@helpdesk.test', 'setor' => 'Financeiro'] + $pessoais('1992-01-15', '11987650005', '02012000'),
+            ['name' => 'João Souza', 'email' => 'joao@helpdesk.test', 'setor' => 'RH'] + $pessoais('1988-09-30', '11987650006', '03102000'),
+            ['name' => 'Ana Lima', 'email' => 'ana@helpdesk.test', 'setor' => 'Comercial'] + $pessoais('2000-04-08', '11987650007', '06454000'),
         ])->map(fn ($u) => User::create($u + ['password' => 'senha123', 'perfil' => 'usuario']));
 
         $categorias = collect([
@@ -77,9 +83,14 @@ class DatabaseSeeder extends Seeder
             $grupo = $grupos[$grupoPorCategoria[$categoria] ?? 'Service Desk'];
             $tecnico = $status === 'aberto' ? null : ($tecnicos->firstWhere('grupo_id', $grupo->id) ?? $tecnicos[1]);
 
+            $inicio = today()->subDays($i);
+            $prioridade = Chamado::calcularPrioridade($impacto, $urgencia);
+
             $chamado = Chamado::create([
                 'titulo' => $titulo,
                 'descricao' => $descricao,
+                'inicio_problema' => $inicio,
+                'prazo' => $inicio->copy()->addDays(Chamado::DIAS_DE_PRAZO[$prioridade]),
                 'categoria_id' => $categorias->firstWhere('nome', $categoria)->id,
                 'grupo_id' => $grupo->id,
                 'impacto' => $impacto,
