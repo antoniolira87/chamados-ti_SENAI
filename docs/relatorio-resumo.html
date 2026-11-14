@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Manutenção — Validação de dados cadastrais (resumo)</title>
+<style>
+    @page { size: A4; margin: 14mm 14mm 14mm 14mm; }
+    :root { --escuro: #0b2a3a; --verde: #2e9e5b; --vermelho: #c62828; --cinza: #5b6b76; --linha: #d6dde2; --fundo: #f3f6f8; }
+    body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10pt; color: #1d2b34; line-height: 1.4; margin: 0; }
+    h2 { font-size: 13.5pt; color: var(--escuro); margin: 16px 0 6px; padding-bottom: 4px; border-bottom: 2.5px solid var(--escuro); break-after: avoid; }
+    p { margin: 5px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 6px 0; }
+    th { background: var(--escuro); color: #fff; text-align: left; padding: 4px 6px; font-weight: 600; }
+    td { border-bottom: 1px solid var(--linha); padding: 3px 6px; vertical-align: top; }
+    tr { break-inside: avoid; }
+    tr:nth-child(even) td { background: var(--fundo); }
+    code { font-family: Consolas, monospace; font-size: 8.5pt; background: #eef2f5; padding: 0 3px; border-radius: 3px; }
+    .ok { color: var(--verde); font-weight: 600; }
+    .nao { color: var(--vermelho); font-weight: 600; }
+    .tag { display: inline-block; font-size: 7.5pt; font-weight: 700; padding: 1px 7px; border-radius: 9px; color: #fff; vertical-align: middle; }
+    .antes { background: var(--vermelho); } .depois { background: var(--verde); } .obrig { background: #f28a1a; }
+
+    .topo { background: var(--escuro); color: #fff; padding: 14px 18px; border-radius: 6px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+    .topo .disc { color: #62d84e; font-size: 8pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .topo h1 { font-size: 18pt; margin: 4px 0 2px; }
+    .topo .sub { color: #c9d6de; font-size: 9.5pt; }
+    .topo .info { text-align: right; font-size: 8.8pt; color: #c9d6de; line-height: 1.5; white-space: nowrap; }
+    .topo .info b { color: #fff; }
+
+    .numeros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 2px; }
+    .numeros div { border: 1px solid var(--linha); border-top: 3px solid #1f73b7; border-radius: 5px; padding: 6px; text-align: center; }
+    .numeros b { display: block; font-size: 15pt; color: var(--escuro); }
+    .numeros span { font-size: 8pt; color: var(--cinza); }
+
+    .par { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; break-inside: avoid; margin: 6px 0 4px; }
+    .par figure { margin: 0; }
+    .par .rotulo { font-weight: 700; font-size: 9pt; margin-bottom: 3px; }
+    .par img { width: 100%; border: 1px solid var(--linha); border-radius: 4px; }
+    figcaption { font-size: 8pt; color: var(--cinza); margin-top: 2px; }
+    .quebra { break-before: page; }
+</style>
+</head>
+<body>
+
+<div class="topo">
+    <div>
+        <div class="disc">Desenvolvimento de Sistemas · Solicitação de manutenção</div>
+        <h1>Validação de dados cadastrais</h1>
+        <div class="sub">Evolução do HelpDesk TI (Laravel 13) — antes e depois</div>
+    </div>
+    <div class="info">
+        Aluno: <b>Antonio Lira</b><br>
+        Professor: Wagner<br>
+        10/11/2026<br>
+        github.com/antoniolira87/chamados-ti_SENAI
+    </div>
+</div>
+
+<div class="numeros">
+    <div><b>2</b><span>formulários mantidos</span></div>
+    <div><b>11</b><span>campos validados</span></div>
+    <div><b>76</b><span>testes novos</span></div>
+    <div><b>93/93</b><span>testes aprovados</span></div>
+</div>
+
+<h2>1. Formulários e o que mudou</h2>
+<p><b>Cadastro de usuários</b> (novo, editar e "Cadastre-se") e <b>Registro de incidente</b> (novo e editar).
+Antes, os dois aceitavam dados inconsistentes. Agora o <b>Laravel valida no servidor</b> e nada errado é gravado; o <b>JavaScript</b> só ajuda com máscaras e avisos na hora.</p>
+
+<table>
+    <tr><th style="width:21%">Campo</th><th style="width:24%"><span class="tag antes">ANTES</span></th><th><span class="tag depois">DEPOIS</span> — regra no servidor</th></tr>
+    <tr><td colspan="3" style="background:#dfe7ec;font-weight:700">Cadastro de usuários</td></tr>
+    <tr><td>Nome</td><td class="nao">Aceitava "A"</td><td>3 a 100 caracteres; recusa só espaços; remove espaços sobrando</td></tr>
+    <tr><td>E-mail</td><td class="nao">Aceitava "a@b"</td><td>Formato completo (<code>nome@dominio.com</code>); único; minúsculas</td></tr>
+    <tr><td><span class="tag obrig">2.1</span> Data de nascimento</td><td class="nao">Não existia</td><td>Data real (recusa 31/02); não futura; <b>18 anos completos</b>; idade máxima 100</td></tr>
+    <tr><td><span class="tag obrig">2.2</span> CPF</td><td class="nao">Não existia</td><td>Com ou sem máscara; 11 números; <b>dígitos verificadores</b>; recusa 111.111.111-11; único</td></tr>
+    <tr><td>CEP</td><td class="nao">Não existia</td><td><code>12345678</code> ou <code>12345-678</code>; só números no banco</td></tr>
+    <tr><td>Celular</td><td class="nao">Não existia</td><td>DDD + 9 dígitos, começando com 9; com ou sem máscara</td></tr>
+    <tr><td colspan="3" style="background:#dfe7ec;font-weight:700">Registro de incidente</td></tr>
+    <tr><td>Descrição resumida</td><td class="nao">Aceitava "x"</td><td>3 a 100 caracteres; recusa só espaços</td></tr>
+    <tr><td>Descrição</td><td class="nao">Aceitava "a"</td><td>Mínimo de 10 caracteres</td></tr>
+    <tr><td>Problema começou em</td><td class="nao">Não existia</td><td>Data real; não pode ser futura</td></tr>
+    <tr><td>Prazo para resolver</td><td class="nao">Não existia</td><td><b>Não pode ser antes do início</b> ("Período inconsistente"); pode ser o mesmo dia; selo "Atrasado" quando vence</td></tr>
+</table>
+
+<h2>2. Testes</h2>
+<p><code>php artisan test</code> → <b class="ok">93 testes aprovados (470 verificações)</b>: 48 do usuário, 28 do incidente e os 17 que já existiam. Cada caso foi testado na <b>inclusão</b> e na <b>alteração</b>. Exemplos:</p>
+<table>
+    <tr><th style="width:24%">Campo</th><th style="width:34%">Valor testado</th><th>Resultado</th></tr>
+    <tr><td>CPF</td><td><code>529.982.247-25</code> e <code>52998224725</code></td><td class="ok">Aceito; gravado <code>52998224725</code></td></tr>
+    <tr><td>CPF</td><td><code>529.982.247-26</code> / <code>111.111.111-11</code></td><td class="nao">"O CPF informado é inválido."</td></tr>
+    <tr><td>Data de nascimento</td><td><code>10/11/2008</code> (18 anos hoje)</td><td class="ok">Aceito (limite)</td></tr>
+    <tr><td>Data de nascimento</td><td><code>11/11/2008</code> (18 amanhã)</td><td class="nao">"É preciso ter pelo menos 18 anos completos."</td></tr>
+    <tr><td>Data de nascimento</td><td><code>31/02/2000</code></td><td class="nao">"Informe uma data … que exista no calendário."</td></tr>
+    <tr><td>CEP / Celular</td><td><code>1234-5678</code> / <code>11887654321</code></td><td class="nao">Formato do CEP / "deve começar com 9"</td></tr>
+    <tr><td>Nome</td><td>só espaços / <code>Al</code></td><td class="nao">Obrigatório / "pelo menos 3 letras"</td></tr>
+    <tr><td>Período</td><td>início = prazo = <code>10/11/2026</code></td><td class="ok">Aceito (período de um dia)</td></tr>
+    <tr><td>Período</td><td>início <code>09/11</code>, prazo <code>08/11</code></td><td class="nao">"Período inconsistente…"</td></tr>
+    <tr><td>Problema começou em</td><td><code>11/11/2026</code> (amanhã)</td><td class="nao">"Não pode ter começado numa data futura."</td></tr>
+</table>
+
+<h2 class="quebra" style="margin-top:0">3. Prints: antes × depois</h2>
+
+<div class="par">
+    <figure><div class="rotulo"><span class="tag antes">ANTES</span> usuário "A" / "a@b" foi gravado</div>
+        <img src="prints/antes-02-usuario-gravado.jpg"></figure>
+    <figure><div class="rotulo"><span class="tag depois">DEPOIS</span> dados errados recusados pelo servidor</div>
+        <img src="prints/depois-02-usuario-recusado-servidor.jpg"></figure>
+</div>
+<p style="font-size:8.5pt;color:var(--cinza)">À direita: formulário enviado <b>sem passar pelo JavaScript</b> (nome curto, e-mail incompleto, 16 anos, CPF com dígito errado, celular sem o 9, CEP com 7 números). O Laravel recusou todos, com uma mensagem para cada erro.</p>
+
+<div class="par" style="margin-top:12px">
+    <figure><div class="rotulo"><span class="tag antes">ANTES</span> incidente com título "x" foi gravado</div>
+        <img src="prints/antes-05-incidente-gravado.jpg"></figure>
+    <figure><div class="rotulo"><span class="tag depois">DEPOIS</span> período inconsistente e textos curtos recusados</div>
+        <img src="prints/depois-08-incidente-recusado-servidor.jpg"></figure>
+</div>
+<p style="font-size:8.5pt;color:var(--cinza)">À direita: prazo (08/11) antes do início (09/11), título "PC" e descrição "curto", enviados direto ao servidor. Nenhum incidente foi criado.</p>
+
+<h2>4. Requisitos da atividade</h2>
+<table>
+    <tr><td style="width:50%">Identificar o formulário · Implementar as regras</td><td class="ok">✔ Usuário (7 campos) e incidente (4 campos)</td></tr>
+    <tr><td>Mensagens claras e específicas</td><td class="ok">✔ Uma por tipo de erro, em português</td></tr>
+    <tr><td>Impedir gravação de dados inválidos</td><td class="ok">✔ Comprovado nos prints e nos testes</td></tr>
+    <tr><td>Validar na inclusão e na alteração</td><td class="ok">✔ Mesmas regras nos dois casos</td></tr>
+    <tr><td>Validação no servidor (PHP/Laravel)</td><td class="ok">✔ <code>UsuarioRequest</code>, <code>ChamadoRequest</code>, <code>Rules\Cpf</code></td></tr>
+    <tr><td>JavaScript como complemento</td><td class="ok">✔ <code>public/js/validacao.js</code> (máscaras e avisos)</td></tr>
+    <tr><td>Testes válidos, inválidos e limites · Documentação</td><td class="ok">✔ 76 testes novos · este documento</td></tr>
+</table>
+
+</body>
+</html>

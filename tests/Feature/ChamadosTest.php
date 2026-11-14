@@ -42,6 +42,8 @@ class ChamadosTest extends TestCase
     {
         $this->post('/cadastro', [
             'name' => 'Fulano', 'email' => 'fulano@teste.com',
+            'data_nascimento' => '1990-05-10', 'cpf' => '529.982.247-25',
+            'celular' => '(11) 98765-4321', 'cep' => '01310-100',
             'password' => 'segredo1', 'password_confirmation' => 'segredo1',
         ])->assertRedirect(route('dashboard'));
 
@@ -60,6 +62,8 @@ class ChamadosTest extends TestCase
             'categoria_id' => $categoria->id,
             'impacto' => 2,
             'urgencia' => 1,
+            'inicio_problema' => today()->format('Y-m-d'),
+            'prazo' => today()->addDays(2)->format('Y-m-d'),
         ])->assertRedirect();
 
         $chamado = Chamado::first();
@@ -74,7 +78,7 @@ class ChamadosTest extends TestCase
     {
         $this->actingAs($this->usuario())
             ->post('/chamados', ['titulo' => '', 'impacto' => 9])
-            ->assertSessionHasErrors(['titulo', 'descricao', 'categoria_id', 'impacto', 'urgencia']);
+            ->assertSessionHasErrors(['titulo', 'descricao', 'categoria_id', 'impacto', 'urgencia', 'inicio_problema', 'prazo']);
     }
 
     public function test_usuario_ve_apenas_os_proprios_chamados(): void

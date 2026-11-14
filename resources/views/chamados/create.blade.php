@@ -9,7 +9,7 @@
     </div>
 </div>
 <div class="card"><div class="card-body p-3 p-md-4">
-    <form action="{{ route('chamados.store') }}" method="POST">
+    <form action="{{ route('chamados.store') }}" method="POST" data-validar-form novalidate>
         @include('chamados._form', ['botao' => 'Enviar'])
     </form>
 </div></div>

@@ -27,5 +27,9 @@ return [
         'grupo_id' => 'grupo de atribuição',
         'impacto' => 'impacto',
         'urgencia' => 'urgência',
+        'cpf' => 'CPF',
+        'cep' => 'CEP',
+        'celular' => 'celular',
+        'data_nascimento' => 'data de nascimento',
     ],
 ];

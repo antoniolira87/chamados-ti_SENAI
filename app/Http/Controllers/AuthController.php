@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UsuarioRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,14 +39,9 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function register(Request $request): RedirectResponse
+    public function register(UsuarioRequest $request): RedirectResponse
     {
-        $dados = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'setor' => ['nullable', 'string', 'max:100'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
+        $dados = $request->validated();
 
         // Auto-cadastro sempre cria um usuário comum.
         $dados['perfil'] = 'usuario';

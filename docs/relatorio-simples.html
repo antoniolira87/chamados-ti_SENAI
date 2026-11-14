@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Manutenção - Validação de dados cadastrais</title>
+<style>
+    @page { size: A4; margin: 25mm 20mm 20mm 25mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11.5pt; line-height: 1.5; color: #000; margin: 0; }
+    h1 { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin: 0 0 10px; }
+    h2 { font-size: 12pt; font-weight: bold; margin: 16px 0 8px; }
+    p { margin: 0 0 8px; text-align: justify; }
+    ul { margin: 0 0 8px; padding-left: 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 10pt; line-height: 1.3; margin: 6px 0 4px; }
+    th, td { border: 1px solid #000; padding: 4px 6px; text-align: left; vertical-align: top; }
+    th { font-weight: bold; }
+    tr { break-inside: avoid; }
+    .fonte { font-size: 9.5pt; margin: 2px 0 14px; }
+    .figura { text-align: center; margin: 12px 0 4px; break-inside: avoid; }
+    .figura img { width: 60%; border: 1px solid #999; }
+    .legenda { font-size: 10pt; text-align: center; margin: 4px 0 14px; }
+    .nova { break-before: page; }
+
+    .capa { height: 247mm; display: flex; flex-direction: column; justify-content: space-between; text-align: center; text-transform: uppercase; font-weight: bold; }
+    .capa .meio { font-size: 14pt; }
+    .capa .meio span { display: block; font-size: 11.5pt; font-weight: normal; text-transform: none; margin-top: 10px; }
+    .capa .dados { text-align: left; margin-left: 50%; text-transform: none; font-weight: normal; font-size: 11pt; }
+</style>
+</head>
+<body>
+
+<div class="capa">
+    <div>SENAI<br>Desenvolvimento de Sistemas</div>
+    <div>Antonio Lira</div>
+    <div class="meio">Manutenção de software:<br>validação de dados cadastrais no sistema HelpDesk TI
+        <span>Relatório da atividade de manutenção corretiva e evolutiva de formulários</span></div>
+    <div class="dados">Trabalho apresentado ao Prof. Carlos, da disciplina de Desenvolvimento de Sistemas.</div>
+    <div>2026</div>
+</div>
+
+<div class="nova">
+    <h1>1. Introdução</h1>
+    <p>Este relatório descreve a manutenção feita no sistema HelpDesk TI, um sistema de chamados de TI que desenvolvi em PHP com o framework Laravel. A atividade pedia para revisar os formulários de cadastro e alteração, porque eles permitiam salvar dados inconsistentes, e implementar regras de validação.</p>
+    <p>As validações foram feitas no servidor, com Laravel, e o JavaScript foi usado só como complemento, para avisar o usuário antes de enviar o formulário. No final, comparo o sistema antes e depois da manutenção e mostro os testes que foram feitos.</p>
+    <p>O código-fonte está no GitHub: github.com/antoniolira87/chamados-ti_SENAI.</p>
+
+    <h1 style="margin-top:22px">2. Formulários escolhidos</h1>
+    <p>Escolhi os dois formulários mais usados do sistema:</p>
+    <table>
+        <tr><th style="width:25%">Formulário</th><th style="width:35%">Telas</th><th>Campos validados</th></tr>
+        <tr><td>Cadastro de usuários</td><td>Novo usuário, Editar usuário e Cadastre-se</td><td>Nome, e-mail, data de nascimento, idade, CPF, CEP e celular</td></tr>
+        <tr><td>Registro de incidente (chamado)</td><td>Registrar incidente e Editar incidente</td><td>Descrição resumida, descrição, data de início do problema e prazo para resolver</td></tr>
+    </table>
+    <p class="fonte">Tabela 1 - Formulários que passaram pela manutenção.</p>
+    <p>O CPF e a data de nascimento, que eram de implementação obrigatória, ficaram no cadastro de usuários, porque são dados de pessoas. No incidente usei o item de data inicial e data final, que combina com um sistema de chamados: a data em que o problema começou e o prazo para resolver.</p>
+    <p>Não usei os itens de valor monetário, estoque e desconto, porque o sistema não tem nenhuma parte de vendas ou estoque.</p>
+</div>
+
+<div class="nova">
+    <h1>3. Situação antes da manutenção</h1>
+    <p>Antes da manutenção os formulários tinham poucas regras. A Tabela 2 e a Tabela 3 mostram como estava cada campo.</p>
+    <table>
+        <tr><th style="width:22%">Campo</th><th style="width:33%">Como estava</th><th>Problema</th></tr>
+        <tr><td>Nome</td><td>Obrigatório, até 255 caracteres</td><td>Aceitava só uma letra, por exemplo "A"</td></tr>
+        <tr><td>E-mail</td><td>Validação simples</td><td>Aceitava "a@b", sem domínio completo</td></tr>
+        <tr><td>Data de nascimento</td><td>Não existia</td><td>Não dava para saber a idade</td></tr>
+        <tr><td>CPF</td><td>Não existia</td><td>Não tinha documento para identificar a pessoa</td></tr>
+        <tr><td>Celular</td><td>Não existia</td><td>Sem telefone de contato</td></tr>
+        <tr><td>CEP</td><td>Não existia</td><td>Sem endereço</td></tr>
+    </table>
+    <p class="fonte">Tabela 2 - Cadastro de usuários antes da manutenção.</p>
+
+    <table>
+        <tr><th style="width:22%">Campo</th><th style="width:33%">Como estava</th><th>Problema</th></tr>
+        <tr><td>Descrição resumida</td><td>Obrigatória, até 255 caracteres</td><td>Aceitava só "x"</td></tr>
+        <tr><td>Descrição</td><td>Obrigatória, até 5000 caracteres</td><td>Aceitava só "a"</td></tr>
+        <tr><td>Início do problema</td><td>Não existia</td><td>Não se sabia desde quando o problema acontecia</td></tr>
+        <tr><td>Prazo para resolver</td><td>Não existia</td><td>Não dava para saber se o chamado estava atrasado</td></tr>
+    </table>
+    <p class="fonte">Tabela 3 - Registro de incidente antes da manutenção.</p>
+    <p>Além disso, o cadastro feito pelo administrador e o "Cadastre-se" tinham regras escritas separadamente em cada controller, e não havia nenhum aviso em JavaScript. O usuário só via o erro depois de enviar o formulário.</p>
+</div>
+
+<div class="nova">
+    <h1>4. Testes na versão antiga</h1>
+    <p>Para mostrar o problema, rodei a versão antiga do sistema com um banco de dados separado e tentei cadastrar dados errados. Nos dois formulários o sistema aceitou e gravou.</p>
+    <div class="figura"><img src="prints/antes-01-usuario-dados-errados.jpg"></div>
+    <p class="legenda">Figura 1 - Versão antiga: cadastro de usuário com nome "A" e e-mail "a@b".</p>
+    <div class="figura"><img src="prints/antes-02-usuario-gravado.jpg"></div>
+    <p class="legenda">Figura 2 - Versão antiga: o usuário foi cadastrado com sucesso.</p>
+</div>
+
+<div class="nova">
+    <div class="figura" style="margin-top:0"><img src="prints/antes-04-incidente-dados-errados.jpg"></div>
+    <p class="legenda">Figura 3 - Versão antiga: incidente com descrição resumida "x" e descrição "a".</p>
+    <div class="figura"><img src="prints/antes-05-incidente-gravado.jpg"></div>
+    <p class="legenda">Figura 4 - Versão antiga: o incidente INC0010009 foi registrado com esses dados.</p>
+</div>
+
+<div class="nova">
+    <h1>5. Alterações realizadas</h1>
+    <h2>5.1 Cadastro de usuários</h2>
+    <table>
+        <tr><th style="width:22%">Campo</th><th>Regras implementadas</th></tr>
+        <tr><td>Nome</td><td>Obrigatório, de 3 a 100 caracteres. Não aceita só espaços e tira os espaços do começo, do fim e os repetidos.</td></tr>
+        <tr><td>E-mail</td><td>Obrigatório, precisa ter formato válido (nome@dominio.com), não pode repetir e é salvo em letras minúsculas.</td></tr>
+        <tr><td>Data de nascimento</td><td>Obrigatória. Só aceita datas que existem (recusa 31/02/2000), não aceita data futura e a pessoa precisa ter 18 anos completos.</td></tr>
+        <tr><td>Idade</td><td>Calculada pela data de nascimento. Mínimo de 18 e máximo de 100 anos.</td></tr>
+        <tr><td>CPF</td><td>Obrigatório, aceita com ou sem pontos e traço, precisa ter 11 números, os dois dígitos verificadores são conferidos, não aceita números todos iguais (111.111.111-11) e não pode repetir.</td></tr>
+        <tr><td>CEP</td><td>Obrigatório, aceita 12345678 ou 12345-678, precisa ter 8 números e é salvo só com os números.</td></tr>
+        <tr><td>Celular</td><td>Obrigatório, DDD mais 9 números, começando com 9. Aceita com ou sem máscara.</td></tr>
+    </table>
+    <p class="fonte">Tabela 4 - Regras do cadastro de usuários.</p>
+
+    <h2>5.2 Registro de incidente</h2>
+    <table>
+        <tr><th style="width:22%">Campo</th><th>Regras implementadas</th></tr>
+        <tr><td>Descrição resumida</td><td>Obrigatória, de 3 a 100 caracteres, não aceita só espaços.</td></tr>
+        <tr><td>Descrição</td><td>Obrigatória, de 10 a 5000 caracteres.</td></tr>
+        <tr><td>Início do problema</td><td>Obrigatória, precisa ser uma data válida e não pode ser no futuro.</td></tr>
+        <tr><td>Prazo para resolver</td><td>Obrigatório, não pode ser antes da data de início (mostra a mensagem de período inconsistente), pode ser no mesmo dia e, em um incidente novo, não pode ser uma data que já passou.</td></tr>
+    </table>
+    <p class="fonte">Tabela 5 - Regras do registro de incidente.</p>
+    <p>Também coloquei na tela do incidente o período e um aviso de "Atrasado" quando o prazo passa e o chamado ainda não foi resolvido.</p>
+</div>
+
+<div class="nova">
+    <h2 style="margin-top:0">5.3 Como foi feito</h2>
+    <p>As regras ficaram em classes de Form Request do Laravel (UsuarioRequest e ChamadoRequest). Assim as mesmas regras valem na inclusão e na alteração. Antes de validar, os dados são ajustados: os espaços sobrando são removidos e o CPF, o CEP e o celular ficam só com os números. Para o CPF criei uma regra própria (app/Rules/Cpf.php) que faz o cálculo dos dígitos verificadores.</p>
+    <p>Se algum campo estiver errado, o Laravel volta para o formulário com a mensagem do erro e nada é salvo no banco. O JavaScript (public/js/validacao.js) coloca as máscaras e mostra os avisos enquanto o usuário digita, mas não substitui a validação do servidor.</p>
+    <table>
+        <tr><th style="width:50%">Arquivo</th><th>O que foi feito</th></tr>
+        <tr><td>app/Rules/Cpf.php</td><td>Novo. Regra de validação do CPF</td></tr>
+        <tr><td>app/Http/Requests/UsuarioRequest.php</td><td>Novo. Regras e mensagens do cadastro de usuários</td></tr>
+        <tr><td>app/Http/Requests/ChamadoRequest.php</td><td>Alterado. Regras de texto e do período</td></tr>
+        <tr><td>app/Http/Controllers/UserController.php e AuthController.php</td><td>Alterados para usar o UsuarioRequest</td></tr>
+        <tr><td>database/migrations (2 arquivos novos)</td><td>Novos campos: CPF, data de nascimento, celular, CEP, início do problema e prazo</td></tr>
+        <tr><td>app/Models/User.php e Chamado.php</td><td>Novos campos, máscaras na exibição, idade e atraso</td></tr>
+        <tr><td>resources/views (formulários e telas de detalhes)</td><td>Novos campos e mensagens de erro</td></tr>
+        <tr><td>public/js/validacao.js</td><td>Novo. Máscaras e avisos no navegador</td></tr>
+        <tr><td>tests/Feature (2 arquivos novos)</td><td>Testes automáticos das validações</td></tr>
+    </table>
+    <p class="fonte">Tabela 6 - Arquivos criados ou alterados.</p>
+</div>
+
+<div class="nova">
+    <h1>6. Testes na versão nova</h1>
+    <p>Repeti os testes na versão nova. Primeiro com o JavaScript funcionando e depois enviando o formulário direto para o servidor, sem passar pelo JavaScript, para confirmar que o Laravel também barra os dados.</p>
+    <div class="figura"><img src="prints/depois-01-usuario-avisos-javascript.jpg"></div>
+    <p class="legenda">Figura 5 - Versão nova: avisos do JavaScript no cadastro de usuário.</p>
+    <div class="figura"><img src="prints/depois-02-usuario-recusado-servidor.jpg"></div>
+    <p class="legenda">Figura 6 - Versão nova: dados enviados direto ao servidor e recusados pelo Laravel (CPF 529.982.247-26 com dígito errado).</p>
+</div>
+
+<div class="nova">
+    <div class="figura" style="margin-top:0"><img src="prints/depois-04-usuario-alteracao.jpg"></div>
+    <p class="legenda">Figura 7 - Versão nova: tela de alteração com os novos campos e a idade calculada.</p>
+    <div class="figura"><img src="prints/depois-05-usuario-alteracao-recusada.jpg"></div>
+    <p class="legenda">Figura 8 - Versão nova: na alteração, data de nascimento no futuro e CEP vazio também são recusados.</p>
+</div>
+
+<div class="nova">
+    <div class="figura" style="margin-top:0"><img src="prints/depois-08-incidente-recusado-servidor.jpg"></div>
+    <p class="legenda">Figura 9 - Versão nova: incidente com prazo antes da data de início, descrição resumida "PC" e descrição "curto". Nenhum incidente foi criado.</p>
+    <div class="figura"><img src="prints/depois-09-incidente-periodo-atrasado.jpg"></div>
+    <p class="legenda">Figura 10 - Versão nova: tela do incidente mostrando o período e o aviso de atrasado.</p>
+</div>
+
+<div class="nova">
+    <h1>7. Testes automáticos</h1>
+    <p>Fiz testes automáticos com o PHPUnit (comando php artisan test), com valores válidos, inválidos e situações-limite. Foram 76 testes novos: 48 do cadastro de usuários e 28 do incidente. Junto com os 17 que já existiam, os 93 testes passaram.</p>
+    <table>
+        <tr><th style="width:22%">Campo</th><th style="width:38%">Valor testado</th><th>Resultado</th></tr>
+        <tr><td>Nome</td><td>"Ana" (3 letras)</td><td>Aceito</td></tr>
+        <tr><td>Nome</td><td>"Al" ou só espaços</td><td>Recusado</td></tr>
+        <tr><td>E-mail</td><td>fulano@empresa (sem .com)</td><td>Recusado</td></tr>
+        <tr><td>CPF</td><td>529.982.247-25 e 52998224725</td><td>Aceito nos dois formatos</td></tr>
+        <tr><td>CPF</td><td>529.982.247-26 (dígito errado)</td><td>Recusado</td></tr>
+        <tr><td>CPF</td><td>111.111.111-11</td><td>Recusado</td></tr>
+        <tr><td>CPF</td><td>com letra ou com 10 números</td><td>Recusado</td></tr>
+        <tr><td>CPF</td><td>já cadastrado em outro usuário</td><td>Recusado</td></tr>
+        <tr><td>Data de nascimento</td><td>10/11/2008 (faz 18 anos no dia)</td><td>Aceito</td></tr>
+        <tr><td>Data de nascimento</td><td>11/11/2008 (faz 18 no dia seguinte)</td><td>Recusado</td></tr>
+        <tr><td>Data de nascimento</td><td>31/02/2000</td><td>Recusado</td></tr>
+        <tr><td>Data de nascimento</td><td>data no futuro</td><td>Recusado</td></tr>
+        <tr><td>Data de nascimento</td><td>101 anos</td><td>Recusado</td></tr>
+        <tr><td>CEP</td><td>01310-100 e 01310100</td><td>Aceito</td></tr>
+        <tr><td>CEP</td><td>1234-5678 ou 12345-67a</td><td>Recusado</td></tr>
+        <tr><td>Celular</td><td>(11) 98765-4321</td><td>Aceito</td></tr>
+        <tr><td>Celular</td><td>11887654321 (sem o 9)</td><td>Recusado</td></tr>
+        <tr><td>Celular</td><td>(11) 8765-4321 (10 números)</td><td>Recusado</td></tr>
+    </table>
+    <p class="fonte">Tabela 7 - Alguns testes do cadastro de usuários.</p>
+</div>
+
+<div class="nova">
+    <table>
+        <tr><th style="width:22%">Campo</th><th style="width:38%">Valor testado</th><th>Resultado</th></tr>
+        <tr><td>Descrição resumida</td><td>"VPN" (3 caracteres)</td><td>Aceito</td></tr>
+        <tr><td>Descrição resumida</td><td>"PC" ou só espaços</td><td>Recusado</td></tr>
+        <tr><td>Descrição</td><td>9 caracteres</td><td>Recusado</td></tr>
+        <tr><td>Início do problema</td><td>data de amanhã</td><td>Recusado</td></tr>
+        <tr><td>Início do problema</td><td>30/02/2026</td><td>Recusado</td></tr>
+        <tr><td>Prazo</td><td>mesmo dia do início</td><td>Aceito</td></tr>
+        <tr><td>Prazo</td><td>antes da data de início</td><td>Recusado (período inconsistente)</td></tr>
+        <tr><td>Prazo</td><td>data que já passou, em incidente novo</td><td>Recusado</td></tr>
+        <tr><td>Prazo</td><td>incidente antigo já atrasado, na alteração</td><td>Aceito</td></tr>
+    </table>
+    <p class="fonte">Tabela 8 - Alguns testes do registro de incidente.</p>
+
+    <p>Todos os testes foram feitos tanto na inclusão quanto na alteração. Nos casos recusados, o teste também confere que o registro não foi salvo no banco.</p>
+    <p>Algumas mensagens que aparecem para o usuário:</p>
+    <ul>
+        <li>"O CPF informado é inválido. Confira os números digitados."</li>
+        <li>"É preciso ter pelo menos 18 anos completos."</li>
+        <li>"A data de nascimento não pode estar no futuro."</li>
+        <li>"O número do celular deve começar com 9 logo depois do DDD."</li>
+        <li>"Período inconsistente: o prazo não pode ser anterior à data em que o problema começou."</li>
+    </ul>
+</div>
+
+<div class="nova">
+    <h1>8. Conclusão</h1>
+    <p>Com a manutenção, os dois formulários passaram a validar os dados antes de salvar. Na versão antiga foi possível cadastrar um usuário com nome "A" e e-mail "a@b" e um incidente com descrição "x". Na versão nova esses dados são recusados, com uma mensagem para cada erro.</p>
+    <p>Os campos obrigatórios da atividade (data de nascimento e CPF) foram implementados no cadastro de usuários, junto com nome, e-mail, idade, CEP e celular. No incidente foram validados os textos e o período entre a data de início e o prazo.</p>
+    <p>As validações foram feitas no servidor com Laravel e valem na inclusão e na alteração. O JavaScript ficou como complemento para ajudar o usuário. Os testes automáticos confirmaram o funcionamento esperado, com valores válidos, inválidos e situações-limite.</p>
+
+    <h2 style="margin-top:22px">Como testar</h2>
+    <p>No terminal, dentro da pasta do projeto:</p>
+    <p>php artisan migrate<br>php artisan test</p>
+    <p>No navegador, pelo cadastro de usuários (menu Usuários ou "Cadastre-se") e pelo Registrar incidente. Um CPF válido para teste é 529.982.247-25.</p>
+</div>
+
+</body>
+</html>

@@ -4,7 +4,7 @@
 <div class="row justify-content-center"><div class="col-lg-8">
     <div class="sn-titulo"><div><div class="sn-tipo">Administração</div><h1>Editar usuário</h1></div></div>
     <div class="card"><div class="card-body p-4">
-        <form action="{{ route('usuarios.update', $usuario) }}" method="POST">
+        <form action="{{ route('usuarios.update', $usuario) }}" method="POST" data-validar-form novalidate>
             @method('PUT')
             @include('usuarios._form', ['botao' => 'Salvar alterações'])
         </form>

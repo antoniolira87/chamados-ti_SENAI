@@ -51,8 +51,11 @@ class Chamado extends Model
         5 => 'light',
     ];
 
+    /** Prazo sugerido (em dias) para cada prioridade. */
+    public const DIAS_DE_PRAZO = [1 => 1, 2 => 2, 3 => 5, 4 => 10, 5 => 30];
+
     protected $fillable = [
-        'titulo', 'descricao', 'impacto', 'urgencia', 'status',
+        'titulo', 'descricao', 'inicio_problema', 'prazo', 'impacto', 'urgencia', 'status',
         'categoria_id', 'grupo_id', 'solicitante_id', 'tecnico_id', 'resolvido_em',
     ];
 
@@ -60,6 +63,8 @@ class Chamado extends Model
     {
         return [
             'resolvido_em' => 'datetime',
+            'inicio_problema' => 'date',
+            'prazo' => 'date',
             'impacto' => 'integer',
             'urgencia' => 'integer',
             'prioridade' => 'integer',
@@ -135,6 +140,12 @@ class Chamado extends Model
     public function finalizado(): bool
     {
         return in_array($this->status, self::FINALIZADOS);
+    }
+
+    /** Ainda pendente e o prazo já passou. */
+    public function atrasado(): bool
+    {
+        return $this->prazo !== null && ! $this->finalizado() && $this->prazo->lt(today());
     }
 
     public function getStatusLabelAttribute(): string
