@@ -42,8 +42,7 @@ class ChamadosTest extends TestCase
     {
         $this->post('/cadastro', [
             'name' => 'Fulano', 'email' => 'fulano@teste.com',
-            'data_nascimento' => '1990-05-10', 'cpf' => '529.982.247-25',
-            'celular' => '(11) 98765-4321', 'cep' => '01310-100',
+            'celular' => '(11) 98765-4321',
             'password' => 'segredo1', 'password_confirmation' => 'segredo1',
         ])->assertRedirect(route('dashboard'));
 
