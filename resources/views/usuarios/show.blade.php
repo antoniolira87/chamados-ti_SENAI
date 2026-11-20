@@ -9,10 +9,7 @@
         </div>
         <dl class="row mb-0">
             <dt class="col-sm-4">E-mail</dt><dd class="col-sm-8">{{ $usuario->email }}</dd>
-            <dt class="col-sm-4">CPF</dt><dd class="col-sm-8">{{ $usuario->cpf_formatado ?: '—' }}</dd>
-            <dt class="col-sm-4">Data de nascimento</dt><dd class="col-sm-8">{{ $usuario->data_nascimento ? $usuario->data_nascimento->format('d/m/Y').' ('.$usuario->idade.' anos)' : '—' }}</dd>
             <dt class="col-sm-4">Celular</dt><dd class="col-sm-8">{{ $usuario->celular_formatado ?: '—' }}</dd>
-            <dt class="col-sm-4">CEP</dt><dd class="col-sm-8">{{ $usuario->cep_formatado ?: '—' }}</dd>
             <dt class="col-sm-4">Setor</dt><dd class="col-sm-8">{{ $usuario->setor ?: '—' }}</dd>
             <dt class="col-sm-4">Grupo de atribuição</dt><dd class="col-sm-8">{{ $usuario->grupo?->nome ?? '—' }}</dd>
             <dt class="col-sm-4">Chamados abertos</dt><dd class="col-sm-8">{{ $usuario->chamados_abertos_count }}</dd>

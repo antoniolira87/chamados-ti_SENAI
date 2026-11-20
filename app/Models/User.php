@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Rules\Cpf;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -12,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'cpf', 'data_nascimento', 'celular', 'cep', 'password', 'perfil', 'setor', 'grupo_id'])]
+#[Fillable(['name', 'email', 'celular', 'password', 'perfil', 'setor', 'grupo_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -29,34 +28,16 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'data_nascimento' => 'date',
             'password' => 'hashed',
         ];
     }
 
-    /** Dados guardados só com números e mostrados com máscara. */
-    public function getCpfFormatadoAttribute(): string
-    {
-        return Cpf::formatar($this->cpf);
-    }
-
+    /** Celular guardado só com números e mostrado com máscara. */
     public function getCelularFormatadoAttribute(): string
     {
         return $this->celular && strlen($this->celular) === 11
             ? '('.substr($this->celular, 0, 2).') '.substr($this->celular, 2, 5).'-'.substr($this->celular, 7)
             : (string) $this->celular;
-    }
-
-    public function getCepFormatadoAttribute(): string
-    {
-        return $this->cep && strlen($this->cep) === 8
-            ? substr($this->cep, 0, 5).'-'.substr($this->cep, 5)
-            : (string) $this->cep;
-    }
-
-    public function getIdadeAttribute(): ?int
-    {
-        return $this->data_nascimento?->age;
     }
 
     public function grupo(): BelongsTo

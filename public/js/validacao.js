@@ -7,23 +7,10 @@
 (function () {
     'use strict';
 
-    const IDADE_MINIMA = 18;
-    const IDADE_MAXIMA = 100;
-
     const numeros = (texto) => texto.replace(/\D/g, '');
 
     // ---------- Máscaras ----------
     const mascaras = {
-        cpf(v) {
-            v = numeros(v).slice(0, 11);
-            return v.replace(/^(\d{3})(\d)/, '$1.$2')
-                .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-                .replace(/\.(\d{3})(\d{1,2})$/, '.$1-$2');
-        },
-        cep(v) {
-            v = numeros(v).slice(0, 8);
-            return v.replace(/^(\d{5})(\d)/, '$1-$2');
-        },
         celular(v) {
             v = numeros(v).slice(0, 11);
             if (v.length > 7) return v.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
@@ -33,31 +20,6 @@
     };
 
     // ---------- Regras (iguais às do servidor) ----------
-    function cpfValido(cpf) {
-        if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
-        for (const tamanho of [9, 10]) {
-            let soma = 0;
-            for (let i = 0; i < tamanho; i++) soma += Number(cpf[i]) * (tamanho + 1 - i);
-            const resto = soma % 11;
-            const digito = resto < 2 ? 0 : 11 - resto;
-            if (digito !== Number(cpf[tamanho])) return false;
-        }
-        return true;
-    }
-
-    function calcularIdade(dataIso) {
-        const [ano, mes, dia] = dataIso.split('-').map(Number);
-        const nascimento = new Date(ano, mes - 1, dia);
-        // Recusa datas que não existem, como 31/02 (o JS "pula" para março).
-        if (nascimento.getFullYear() !== ano || nascimento.getMonth() !== mes - 1 || nascimento.getDate() !== dia) {
-            return null;
-        }
-        const hoje = new Date();
-        let idade = hoje.getFullYear() - ano;
-        if (hoje.getMonth() < mes - 1 || (hoje.getMonth() === mes - 1 && hoje.getDate() < dia)) idade--;
-        return { idade, futura: nascimento > hoje };
-    }
-
     const regras = {
         nome(campo) {
             const v = campo.value.trim().replace(/\s+/g, ' ');
@@ -72,40 +34,11 @@
             if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v)) return 'Informe um e-mail válido, por exemplo: nome@empresa.com.';
             return '';
         },
-        nascimento(campo) {
-            const ajuda = campo.parentElement.querySelector('[data-idade]');
-            if (ajuda) ajuda.textContent = 'Mínimo de 18 anos completos.';
-            if (!campo.value) {
-                return campo.validity.badInput
-                    ? 'Informe uma data de nascimento que exista no calendário (dia/mês/ano).'
-                    : 'O campo data de nascimento é obrigatório.';
-            }
-            const resultado = calcularIdade(campo.value);
-            if (!resultado) return 'Informe uma data de nascimento que exista no calendário (dia/mês/ano).';
-            if (resultado.futura) return 'A data de nascimento não pode estar no futuro.';
-            if (ajuda) ajuda.textContent = `Idade: ${resultado.idade} anos.`;
-            if (resultado.idade < IDADE_MINIMA) return `É preciso ter pelo menos ${IDADE_MINIMA} anos completos.`;
-            if (resultado.idade > IDADE_MAXIMA) return `A idade máxima permitida é de ${IDADE_MAXIMA} anos. Confira o ano de nascimento.`;
-            return '';
-        },
-        cpf(campo) {
-            const v = numeros(campo.value);
-            if (!campo.value.trim()) return 'O campo CPF é obrigatório.';
-            if (v.length !== 11) return 'O CPF deve ter exatamente 11 números (pode digitar com ou sem pontos e traço).';
-            if (!cpfValido(v)) return 'O CPF informado é inválido. Confira os números digitados.';
-            return '';
-        },
         celular(campo) {
             const v = numeros(campo.value);
             if (!campo.value.trim()) return 'O campo celular é obrigatório.';
             if (v.length !== 11) return 'O celular deve ter DDD + 9 números, por exemplo: (11) 98765-4321.';
             if (!/^[1-9]{2}9/.test(v)) return 'O número do celular deve começar com 9 logo depois do DDD.';
-            return '';
-        },
-        cep(campo) {
-            const v = numeros(campo.value);
-            if (!campo.value.trim()) return 'O campo CEP é obrigatório.';
-            if (v.length !== 8) return 'O CEP deve estar no formato 12345-678 ou 12345678, somente com números.';
             return '';
         },
 
@@ -149,8 +82,11 @@
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
+    // Recusa datas que não existem, como 31/02 (o JS "pula" para março).
     function dataExiste(dataIso) {
-        return calcularIdade(dataIso) !== null;
+        const [ano, mes, dia] = dataIso.split('-').map(Number);
+        const data = new Date(ano, mes - 1, dia);
+        return data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
     }
 
     // ---------- Mostrar o resultado no campo ----------
@@ -184,8 +120,6 @@
             campo.addEventListener(ehData ? 'change' : 'input', () => {
                 if (campo.dataset.tocado || ehData) validar(campo);
             });
-
-            if (campo.value && tipo === 'nascimento') validar(campo);
         });
 
         // Período: o prazo não pode começar antes do início.
